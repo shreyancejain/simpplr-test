@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -7,6 +7,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Rating from '@material-ui/lab/Rating';
 import Typography from '@material-ui/core/Typography';
 import FavoriteIcon from '@material-ui/icons/Favorite';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,34 +30,56 @@ const useStyles = makeStyles((theme) => ({
   rating: {
     'margin-bottom': '10px',
     color: 'red'
+  },
+  progress: {
+    position: 'relative',
+    top: '50%',
+    left: '50%'
   }
 }));
 
-export default function ShopCard() {
+export default function ShopCard(props) {
   const classes = useStyles();
-  const value = 4;
+  const [shop] = useState(props.shop);
+  const [review, setReview] = useState([]);
+  console.log(shop.rating, shop);
+  const [loadingReview, setLoading] = useState(true);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/review/${shop.id}`)
+      .then(response => response.json())
+      .then(review => {
+        setReview(review)
+        setLoading(false);
+      });
+  }, [shop.id])
   return (
     <Card className={classes.root}>
       <CardMedia
         className={classes.media}
-        image="https://s3-media4.fl.yelpcdn.com/bphoto/AjZvhwzPldaryKynBQOzyA/o.jpg"
-        title="test"
+        image={shop.image_url}
+        title={shop.name}
       />
       <CardContent className={classes.content}>
         <CardHeader
           className={classes.header}
-          title="test"
-          subheader="address"
+          title={shop.name}
+          subheader={shop.location.display_address.join(', ')}
         />
-        <Rating 
+        <Rating
           className={classes.rating}
-          value={value} readOnly
+          value={shop.rating} readOnly
+          precision={0.5}
           icon={<FavoriteIcon fontSize="inherit" />}
         />
-
-        <Typography variant="body2" color="textSecondary" component="p">
-          test comments
-        </Typography>
+        {loadingReview ? <div><CircularProgress className={classes.progress} color="secondary"/></div> : <div>
+          <Typography variant="body2" color="textSecondary" component="p">
+            {review.text}
+          </Typography>
+          <Typography variant="body1" align="right" color="textPrimary" component="p">
+            By: {review?.user?.name}
+          </Typography>
+        </div>}
       </CardContent>
     </Card>
   );

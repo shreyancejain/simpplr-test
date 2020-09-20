@@ -1,26 +1,43 @@
 import React from 'react';
-import logo from './logo.svg';
+import ShopCard from './shop-card/ShopCard'
 import './App.css';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      shopList: [],
+      loading: true
+    }
+  }
+
+  componentDidMount() {
+    this.setState({ loading: true }, () => {
+      fetch('/api/shops')
+      .then(response => response.json())
+      .then(shopList => {
+        this.setState({
+          loading: false,
+          shopList: shopList || []
+        })
+      });
+    });
+  }
+
+  render() {
+    const { shopList, loading } = this.state;
+    return (
+      <div className="App">
+        {loading && <CircularProgress  classes={{ root: 'progress' }} size={60} />}
+        {shopList.map(
+          (shop) => (
+            <ShopCard shop={shop} key={shop.id}/>
+          )
+        )}
+      </div>
+    );
+  }
 }
 
 export default App;
